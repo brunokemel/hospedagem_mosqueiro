@@ -1,0 +1,16 @@
+# Dependências e artefatos de build
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Checkouts e pacotes temporários do fluxo de publicação
+site-source/
+.site-package-stage*/
+*.tgz
+orla-mobile-preserve.jpg
+
+# Planejamento e documentos usados somente como apoio
+.planning/
+PROMPT_SITE_MOSQUEIRO.md
+pontos_turisticos_mosqueiro_2026-10-13.md
+pontos_turisticos_mosqueiro_detalhado_2026-10-13.md

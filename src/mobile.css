@@ -1,0 +1,111 @@
+/* Ajustes intermediários para tablets e celulares em orientação horizontal. */
+@media (max-width: 1020px) {
+  .site-header { padding-inline: 24px; }
+  .header-actions { gap: 8px; }
+  .hero { min-height: 0; display: flex; flex-direction: column; align-items: stretch; }
+  .hero-content { width: min(100% - 40px, 760px); margin: 0 auto; padding: 64px 0 34px; }
+  .hero-art { position: relative; inset: auto; width: 100%; min-height: 360px; }
+  .scroll-cue { display: none; }
+  .search-panel { width: 100%; }
+  .listing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .path-card { grid-template-columns: 1.3fr .7fr; }
+  .story-copy { padding: 72px 48px; }
+}
+
+/* Layout mobile principal, otimizado para larguras entre 390 e 720 px. */
+@media (max-width: 720px) {
+  body { overflow-x: hidden; }
+  .site-header { height: 64px; padding-inline: 14px; }
+  .brand { flex-shrink: 0; font-size: 20px; }
+  .brand-mark { width: 30px; height: 30px; }
+  .header-actions { margin-left: auto; gap: 0; }
+  .header-actions .text-button, .header-actions .button { display: none; }
+  .icon-button { width: 42px; min-width: 42px; height: 42px; }
+
+  .hero { min-height: 0; }
+  .hero-content { width: 100%; padding: 42px 16px 26px; }
+  .hero h1 { max-width: 100%; font-size: clamp(43px, 13vw, 58px); line-height: .94; }
+  .hero-copy { margin: 18px 0 24px; font-size: 16px; line-height: 1.5; }
+  .hero-art { min-height: 280px; }
+  .sun { width: 74px; height: 74px; }
+  .hero-label { right: 16px; bottom: 18px; }
+  .demo-note { margin: 10px 2px 0; line-height: 1.45; }
+
+  .search-panel { border-radius: 14px; box-shadow: 0 10px 28px rgba(50, 46, 41, .11); }
+  .mode-tabs { padding-inline: 8px; }
+  .mode-tabs button { width: 50%; min-height: 54px; padding-inline: 8px; }
+  .search-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px; }
+  .search-fields label, .search-fields label:first-child { min-height: 62px; padding: 8px 10px; }
+  .search-fields select, .search-fields input { min-height: 30px; font-size: 14px; }
+  .search-button { min-height: 52px; }
+
+  .section { padding: 66px 16px; }
+  .section-heading { margin-bottom: 26px; }
+  .section-heading h2 { font-size: clamp(37px, 11vw, 46px); line-height: .98; }
+  .section-heading.compact > p { margin-top: 16px; }
+  .listing-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; }
+  .sort-label select { width: 100%; min-height: 46px; }
+  .active-filter { margin: 0 0 20px; line-height: 1.5; }
+  .listing-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .listing-card { border-radius: 14px; }
+  .listing-media { aspect-ratio: 16 / 10; }
+  .listing-body { padding: 18px 16px; }
+  .listing-footer { gap: 10px; }
+  .card-link { min-height: 44px; padding-inline: 4px; white-space: nowrap; }
+
+  .region-grid { gap: 12px; }
+  .region-card { min-height: 126px; padding: 20px 18px; gap: 14px; }
+  .region-number { font-size: 32px; }
+  .region-card b { font-size: 27px; }
+  .region-card small { line-height: 1.35; }
+
+  .path-card { min-height: 0; padding: 64px 20px; grid-template-columns: minmax(0, 1fr); }
+  .path-card h2 { font-size: clamp(42px, 12vw, 54px); }
+  .path-card .button, .host-copy .button { width: 100%; }
+  .story-visual { min-height: 300px; }
+  .house-lines { width: 68%; height: 55%; }
+  .story-copy { padding: 62px 20px; }
+  .story-copy h2 { font-size: clamp(40px, 11vw, 52px); }
+  .trust-grid { gap: 4px; }
+  .trust-grid article { padding: 22px 4px; }
+
+  .guide-section, .host-section { padding: 64px 20px; gap: 36px; }
+  .guide-section h2, .host-copy h2 { font-size: clamp(42px, 12vw, 54px); }
+  .guide-list summary { min-height: 80px; gap: 10px; font-size: 21px; line-height: 1.15; }
+  .guide-list summary span { margin-right: 4px; }
+  .guide-list details p { margin: -4px 36px 24px; }
+  .host-section li { gap: 18px; }
+  .host-section li > b { font-size: 34px; }
+
+  .site-footer { padding: 58px 20px 24px; }
+  .footer-top { grid-template-columns: 1fr 1fr; gap: 36px 24px; padding-bottom: 44px; }
+  .footer-bottom { line-height: 1.6; }
+
+  .modal { width: calc(100% - 16px); max-height: calc(100dvh - 16px); border-radius: 14px; }
+  .modal-close { top: 10px; right: 10px; }
+  .detail-visual { height: 210px; padding: 18px; }
+  .detail-body, .form-content { padding: 24px 18px; }
+  .detail-body h2, .form-content h2 { padding-right: 30px; font-size: 36px; }
+  .detail-action .button, .form-content form > .button { width: 100%; }
+  .toast { right: 10px; bottom: 10px; left: 10px; max-width: none; text-align: center; }
+}
+
+/* Celulares estreitos: os controles deixam de competir por espaço horizontal. */
+@media (max-width: 430px) {
+  .hero-content { padding-top: 34px; }
+  .hero h1 { font-size: clamp(40px, 12.5vw, 49px); }
+  .search-fields { grid-template-columns: minmax(0, 1fr); }
+  .search-fields label:first-child, .search-button { grid-column: auto; }
+  .listing-tools { grid-template-columns: minmax(0, 1fr); }
+  .listing-tools .button { width: 100%; }
+  .listing-footer { align-items: flex-start; flex-direction: column; }
+  .card-link { width: 100%; justify-content: flex-start; text-align: left; }
+  .footer-top { grid-template-columns: minmax(0, 1fr); }
+  .footer-top > div:first-child { grid-column: auto; }
+  .footer-bottom span:last-child { display: block; }
+}
+
+/* Respeita preferências de movimento também nos elementos adicionados no mobile. */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-nav { animation: none; }
+}

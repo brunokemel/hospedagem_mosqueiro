@@ -13,6 +13,12 @@ import type { ListingMode, SearchFilters } from './types'
 
 type ModalKind = 'login' | 'announce' | 'booking' | 'visit' | null
 type SortOrder = 'featured' | 'low' | 'high'
+type Beach = {
+  name: string
+  area: string
+  description: string
+  query: string
+}
 
 // Dependências de domínio e aplicação, injetadas sem acoplar a interface à fonte de dados.
 const searchListings = new SearchListings(new InMemoryListingRepository())
@@ -36,6 +42,17 @@ const favorites = ref<string[]>(favoriteService.list())
 const searchResult = ref<readonly ListingEntity[]>([])
 const detailDialog = ref<HTMLDialogElement | null>(null)
 const formDialog = ref<HTMLDialogElement | null>(null)
+const routingBeach = ref<string | null>(null)
+
+// Os destinos usam nomes completos reconhecidos pelos principais aplicativos de mapa.
+const beaches: readonly Beach[] = [
+  { name: 'Praia do Farol', area: 'Farol', description: 'Orla animada, pôr do sol e estrutura por perto.', query: 'Praia do Farol, Mosqueiro, Belém - PA' },
+  { name: 'Praia do Chapéu Virado', area: 'Chapéu Virado', description: 'Faixa de areia ampla, ondas e quiosques na orla.', query: 'Praia do Chapéu Virado, Mosqueiro, Belém - PA' },
+  { name: 'Praia do Murubira', area: 'Murubira', description: 'Praia extensa e um clima tranquilo para ir em família.', query: 'Praia do Murubira, Mosqueiro, Belém - PA' },
+  { name: 'Praia do Ariramba', area: 'Ariramba', description: 'Um trecho mais sossegado da orla de Mosqueiro.', query: 'Praia do Ariramba, Mosqueiro, Belém - PA' },
+  { name: 'Praia do Paraíso', area: 'Paraíso', description: 'Paisagem aberta e natureza no lado norte da ilha.', query: 'Praia do Paraíso, Mosqueiro, Belém - PA' },
+  { name: 'Praia da Baía do Sol', area: 'Baía do Sol', description: 'Horizonte amplo e ritmo calmo na ponta da ilha.', query: 'Praia da Baía do Sol, Mosqueiro, Belém - PA' },
+]
 
 // A vitrine limita os resultados; o caso de uso continua responsável pela busca e ordenação.
 const visibleListings = computed(() => showAll.value ? searchResult.value : searchResult.value.slice(0, 3))
@@ -102,6 +119,46 @@ function showToast(message: string): void {
 function formatPrice(listing: ListingEntity): string {
   return listing.price.format({ hideCents: listing.purpose === 'sale' })
 }
+
+function googleMapsRoute(beach: Beach, origin?: GeolocationCoordinates): string {
+  const params = new URLSearchParams({ api: '1', destination: beach.query, travelmode: 'driving' })
+  if (origin) params.set('origin', `${origin.latitude},${origin.longitude}`)
+  return `https://www.google.com/maps/dir/?${params.toString()}`
+}
+
+function openRouteUrl(beach: Beach, origin?: GeolocationCoordinates): void {
+  const isAppleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  if (isAppleMobile) {
+    const params = new URLSearchParams({ daddr: beach.query, dirflg: 'd' })
+    params.set('saddr', origin ? `${origin.latitude},${origin.longitude}` : 'Current Location')
+    window.location.href = `https://maps.apple.com/?${params.toString()}`
+    return
+  }
+  window.location.href = googleMapsRoute(beach, origin)
+}
+
+function traceRoute(beach: Beach): void {
+  routingBeach.value = beach.name
+  showToast('Permita o acesso à localização para traçar a rota a partir de onde você está.')
+
+  if (!navigator.geolocation) {
+    openRouteUrl(beach)
+    return
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    ({ coords }) => openRouteUrl(beach, coords),
+    () => {
+      showToast('Localização não liberada. O mapa usará sua posição atual ao abrir.')
+      openRouteUrl(beach)
+    },
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
+  )
+}
+
+function wazeUrl(beach: Beach): string {
+  return `https://www.waze.com/ul?${new URLSearchParams({ q: beach.query, navigate: 'yes' }).toString()}`
+}
 </script>
 
 <template>
@@ -148,6 +205,26 @@ function formatPrice(listing: ListingEntity): string {
 
     <section v-if="route.name === 'mosqueiro'" class="section regions-section page-section"><div class="section-heading compact"><div><p class="eyebrow">Cada canto, um ritmo</p><h2>Explore a ilha por região</h2></div><p>Praia, vila ou sossego: conheça a vizinhança que combina com seus planos.</p></div><div class="region-grid"><article v-for="(item, index) in [{name:'Farol',copy:'Orla, movimento e pôr do sol'},{name:'Chapéu Virado',copy:'Memória, praça e casas de época'},{name:'Murubira',copy:'Praia extensa e clima familiar'},{name:'Baía do Sol',copy:'Calma, natureza e horizonte aberto'}]" :key="item.name" class="region-card" :class="`region-${index + 1}`"><span class="region-number">0{{ index + 1 }}</span><span><b>{{ item.name }}</b><small>{{ item.copy }}</small></span></article></div></section>
 
+    <section v-if="route.name === 'mosqueiro'" class="section beach-routes-section" aria-labelledby="beach-routes-title">
+      <div class="section-heading compact">
+        <div><p class="eyebrow">Chegue sem complicação</p><h2 id="beach-routes-title">As praias de Mosqueiro no seu mapa</h2></div>
+        <p>Escolha uma praia, permita o acesso à sua localização e receba a rota a partir de onde você estiver.</p>
+      </div>
+      <div class="beach-grid">
+        <article v-for="(beach, index) in beaches" :key="beach.name" class="beach-card">
+          <div class="beach-card-top"><span class="beach-pin" aria-hidden="true">⌖</span><small>Destino 0{{ index + 1 }}</small></div>
+          <p class="beach-area">{{ beach.area }} · Mosqueiro</p>
+          <h3>{{ beach.name }}</h3>
+          <p>{{ beach.description }}</p>
+          <div class="beach-actions">
+            <button class="button button-primary" type="button" @click="traceRoute(beach)">{{ routingBeach === beach.name ? 'Abrindo mapa…' : 'Traçar rota' }} <span aria-hidden="true">→</span></button>
+            <a :href="wazeUrl(beach)" target="_blank" rel="noopener noreferrer" :aria-label="`Abrir rota para ${beach.name} no Waze`">Abrir no Waze</a>
+          </div>
+        </article>
+      </div>
+      <p class="location-note"><span aria-hidden="true">◎</span> Sua localização é usada apenas pelo aplicativo de mapas para montar a rota e não fica salva no Ilha & Lar.</p>
+    </section>
+
     <!-- Diretório gastronômico com busca, categorias e canais externos verificados. -->
     <FoodDirectory v-if="route.name === 'food'" />
 
@@ -187,6 +264,22 @@ main { overflow: hidden; }
 .main-nav a.router-link-active { color: var(--terra); }
 .page-section { min-height: calc(100vh - 80px); }
 
+/* Guia de praias com ações pensadas para toque e abertura em apps de navegação. */
+.beach-routes-section { background: #edf3f1; }
+.beach-grid { width: min(1400px, 100%); margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.beach-card { min-height: 310px; display: flex; flex-direction: column; padding: 26px; border: 1px solid rgba(23, 76, 66, .14); border-radius: 18px; background: #fff; box-shadow: 0 8px 26px rgba(16, 59, 52, .05); }
+.beach-card-top { display: flex; align-items: center; justify-content: space-between; color: var(--forest); }
+.beach-card-top small { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.beach-pin { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; background: #e2eeec; font-size: 24px; }
+.beach-area { margin: 25px 0 5px !important; color: var(--terra) !important; font-size: 11px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.beach-card h3 { margin: 0 0 10px; color: var(--forest); font: 600 29px "Cormorant Garamond", serif; }
+.beach-card > p:not(.beach-area) { margin: 0 0 24px; color: var(--muted); line-height: 1.6; }
+.beach-actions { margin-top: auto; display: flex; align-items: center; gap: 18px; }
+.beach-actions .button { min-height: 46px; padding-inline: 17px; }
+.beach-actions a { color: var(--forest); font-size: 13px; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+.location-note { width: min(1400px, 100%); margin: 22px auto 0; display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.location-note span { color: var(--forest); font-size: 18px; }
+
 @media (max-width: 1020px) {
   .hero::after { display: none; }
   .hero-art { inset: auto; }
@@ -195,10 +288,16 @@ main { overflow: hidden; }
   .mobile-nav { position: absolute; top: calc(100% + 1px); right: 16px; left: 16px; display: grid; padding: 10px; border: 1px solid rgba(23, 76, 66, .14); border-radius: 0 0 16px 16px; background: var(--paper); box-shadow: 0 18px 40px rgba(16, 59, 52, .16); }
   .mobile-nav a, .mobile-nav button { min-height: 50px; display: flex; align-items: center; padding: 0 14px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--forest); font-weight: 700; text-align: left; }
   .mobile-nav button { border-bottom: 0; color: var(--terra); }
+  .beach-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 720px) {
   .hero-photo { object-position: 47% 58%; }
   .hero-photo-shade { background: linear-gradient(0deg, rgba(16, 30, 27, .28), transparent 55%); }
+  .beach-grid { grid-template-columns: 1fr; }
+  .beach-card { min-height: 285px; }
+  .beach-actions { align-items: stretch; flex-direction: column; gap: 13px; }
+  .beach-actions a { min-height: 40px; display: grid; place-items: center; }
+  .location-note { align-items: flex-start; }
 }
 </style>

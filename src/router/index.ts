@@ -9,7 +9,6 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: PageRoute },
     { path: '/hospedagens', name: 'stays', component: PageRoute },
-    { path: '/imoveis', name: 'properties', component: PageRoute },
     { path: '/onde-comer', name: 'food', component: PageRoute },
     { path: '/mosqueiro', name: 'mosqueiro', component: PageRoute },
   ],

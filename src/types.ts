@@ -1,4 +1,4 @@
-export type ListingMode = 'stay' | 'sale'
+export type ListingMode = 'stay'
 
 export interface Listing {
   id: string

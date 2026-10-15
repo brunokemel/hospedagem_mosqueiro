@@ -4,11 +4,11 @@ import type { ListingEntity } from '../domain/entities/ListingEntity'
 // API tipada do componente visual de anúncio.
 const props = defineProps<{ listing: ListingEntity; favorite: boolean }>()
 defineEmits<{ favorite: [id: string]; details: [listing: ListingEntity] }>()
-const price = props.listing.price.format({ hideCents: props.listing.purpose === 'sale' })
+const price = props.listing.price.format()
 </script>
 
 <template>
-  <!-- Card acessível e reutilizável para hospedagem e venda. -->
+  <!-- Card acessível e reutilizável para hospedagens. -->
   <article class="listing-card">
     <div class="listing-media" :class="`variant-${listing.visualVariant}`">
       <span class="listing-badge">{{ listing.badge }}</span>
@@ -19,7 +19,7 @@ const price = props.listing.price.format({ hideCents: props.listing.purpose === 
       <h3>{{ listing.title }}</h3>
       <p class="listing-meta">{{ listing.meta.join(' · ') }}</p>
       <div class="listing-footer">
-        <div class="listing-price"><small>{{ listing.purpose === 'stay' ? 'a partir de' : 'valor demonstrativo' }}</small><strong>{{ price }}</strong><small v-if="listing.purpose === 'stay'">por diária · taxas à parte</small></div>
+        <div class="listing-price"><small>a partir de</small><strong>{{ price }}</strong><small>por diária · taxas à parte</small></div>
         <button class="card-link" @click="$emit('details', listing)">Ver detalhes →</button>
       </div>
     </div>

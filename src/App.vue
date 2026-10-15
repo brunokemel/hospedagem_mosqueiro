@@ -11,7 +11,7 @@ import type { ListingEntity } from './domain/entities/ListingEntity'
 import { InMemoryListingRepository } from './infrastructure/repositories/InMemoryListingRepository'
 import type { ListingMode, SearchFilters } from './types'
 
-type ModalKind = 'login' | 'announce' | 'booking' | 'visit' | null
+type ModalKind = 'login' | 'announce' | 'booking' | null
 type SortOrder = 'featured' | 'low' | 'high'
 type Beach = {
   name: string
@@ -30,7 +30,7 @@ const router = useRouter()
 const heroImage = new URL('./banner/orla2.0.jpg', import.meta.url).href
 
 // Estado reativo da experiência principal.
-const mode = computed<ListingMode>(() => route.name === 'properties' ? 'sale' : 'stay')
+const mode = computed<ListingMode>(() => 'stay')
 const region = ref(typeof route.query.regiao === 'string' ? route.query.regiao : '')
 const sortOrder = ref<SortOrder>('featured')
 const showAll = ref(false)
@@ -60,7 +60,6 @@ const visibleListings = computed(() => showAll.value ? searchResult.value : sear
 const modalTitle = computed(() => {
   if (modalKind.value === 'login') return 'Entre na Ilha & Lar'
   if (modalKind.value === 'announce') return 'Conte sobre seu imóvel'
-  if (modalKind.value === 'visit') return 'Agende uma visita'
   return 'Peça sua reserva'
 })
 
@@ -73,13 +72,12 @@ watchEffect(async () => {
   searchResult.value = await searchListings.execute({ mode: mode.value, region: region.value, order: sortOrder.value })
 })
 
-function updateUrl(currentMode: ListingMode, currentRegion: string): void {
-  const name = currentMode === 'sale' ? 'properties' : 'stays'
-  router.replace({ name, query: currentRegion ? { regiao: currentRegion } : {} })
+function updateUrl(_currentMode: ListingMode, currentRegion: string): void {
+  router.replace({ name: 'stays', query: currentRegion ? { regiao: currentRegion } : {} })
 }
 
-function chooseMode(value: ListingMode, scroll = false): void {
-  router.push({ name: value === 'sale' ? 'properties' : 'stays' })
+function chooseMode(_value: ListingMode, scroll = false): void {
+  router.push({ name: 'stays' })
   if (scroll) nextTick(() => window.scrollTo({ top: 0, behavior: 'smooth' }))
 }
 
@@ -117,7 +115,7 @@ function showToast(message: string): void {
 }
 
 function formatPrice(listing: ListingEntity): string {
-  return listing.price.format({ hideCents: listing.purpose === 'sale' })
+  return listing.price.format()
 }
 
 function googleMapsRoute(beach: Beach, origin?: GeolocationCoordinates): string {
@@ -166,7 +164,7 @@ function wazeUrl(beach: Beach): string {
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
   <header class="site-header">
     <RouterLink class="brand" to="/" aria-label="Ilha & Lar — início"><span class="brand-mark" aria-hidden="true"><i /><i /><i /></span><span>Ilha <b>&</b> Lar</span></RouterLink>
-    <nav class="main-nav" aria-label="Navegação principal"><RouterLink to="/hospedagens">Hospedagens</RouterLink><RouterLink to="/imoveis">Imóveis</RouterLink><RouterLink to="/onde-comer">Onde comer</RouterLink><RouterLink to="/mosqueiro">Mosqueiro</RouterLink></nav>
+    <nav class="main-nav" aria-label="Navegação principal"><RouterLink to="/hospedagens">Hospedagens</RouterLink><RouterLink to="/onde-comer">Onde comer</RouterLink><RouterLink to="/mosqueiro">Mosqueiro</RouterLink></nav>
     <div class="header-actions">
       <button class="text-button" @click="openForm('announce')">Anunciar</button>
       <button class="icon-button" aria-label="Ver favoritos" @click="showToast(favorites.length ? `${favorites.length} anúncio(s) salvo(s) neste navegador.` : 'Você ainda não salvou nenhum anúncio.')">♡ <span>{{ favorites.length }}</span></button>
@@ -176,7 +174,6 @@ function wazeUrl(beach: Beach): string {
     <!-- Menu compacto para navegação em telas pequenas. -->
     <nav v-if="mobileMenuOpen" id="mobile-navigation" class="mobile-nav" aria-label="Navegação móvel">
       <RouterLink to="/hospedagens" @click="mobileMenuOpen = false">Hospedagens</RouterLink>
-      <RouterLink to="/imoveis" @click="mobileMenuOpen = false">Imóveis à venda</RouterLink>
       <RouterLink to="/onde-comer" @click="mobileMenuOpen = false">Onde comer</RouterLink>
       <RouterLink to="/mosqueiro" @click="mobileMenuOpen = false">Conheça Mosqueiro</RouterLink>
       <button @click="openForm('announce'); mobileMenuOpen = false">Quero anunciar</button>
@@ -191,13 +188,13 @@ function wazeUrl(beach: Beach): string {
         <span class="hero-photo-shade" aria-hidden="true" />
         <div class="hero-label">◌ Orla de Mosqueiro</div>
       </div>
-      <div class="hero-content"><p class="eyebrow">Mosqueiro, Belém–PA</p><h1>Seu lugar em<br> Mosqueiro começa aqui.</h1><p class="hero-copy">Para passar uns dias perto do rio ou criar novas raízes na ilha.</p><SearchPanel :mode="mode" @update:mode="chooseMode" @search="search" /><p class="demo-note">Anúncios e valores desta versão são demonstrativos.</p></div>
+      <div class="hero-content"><p class="eyebrow">Mosqueiro, Belém–PA</p><h1>Seu lugar em<br> Mosqueiro começa aqui.</h1><p class="hero-copy">Para passar uns dias perto do rio e viver Mosqueiro no seu tempo.</p><SearchPanel :mode="mode" @update:mode="chooseMode" @search="search" /><p class="demo-note">Anúncios e valores desta versão são demonstrativos.</p></div>
       <RouterLink class="scroll-cue" to="/mosqueiro">Descubra a ilha <span>→</span></RouterLink>
     </section>
 
     <!-- Resultados filtráveis gerados pelo caso de uso. -->
-    <section v-if="route.name === 'stays' || route.name === 'properties'" id="destaques" class="section listings-section page-section">
-      <div class="section-heading"><div><p class="eyebrow">Seleção local</p><h2>{{ mode === 'stay' ? 'Estadias para viver a ilha sem pressa' : 'Imóveis para criar raízes na ilha' }}</h2></div><div class="listing-tools"><label class="sort-label">Ordenar<select v-model="sortOrder"><option value="featured">Recomendados</option><option value="low">Menor preço</option><option value="high">Maior preço</option></select></label><BaseButton variant="outline" @click="showAll = !showAll">{{ showAll ? 'Ver menos' : 'Ver todos' }}</BaseButton></div></div>
+    <section v-if="route.name === 'stays'" id="destaques" class="section listings-section page-section">
+      <div class="section-heading"><div><p class="eyebrow">Seleção local</p><h2>Estadias para viver a ilha sem pressa</h2></div><div class="listing-tools"><label class="sort-label">Ordenar<select v-model="sortOrder"><option value="featured">Recomendados</option><option value="low">Menor preço</option><option value="high">Maior preço</option></select></label><BaseButton variant="outline" @click="showAll = !showAll">{{ showAll ? 'Ver menos' : 'Ver todos' }}</BaseButton></div></div>
       <div v-if="region" class="active-filter">Mostrando anúncios em <b>{{ region }}</b> · <button @click="region = ''; updateUrl(mode, '')">remover filtro</button></div>
       <div v-if="visibleListings.length" class="listing-grid" aria-live="polite"><ListingCard v-for="listing in visibleListings" :key="listing.id" :listing="listing" :favorite="favorites.includes(listing.id)" @favorite="toggleFavorite" @details="openDetails" /></div>
       <div v-else class="empty-state"><span>⌕</span><h3>Nenhum canto encontrado</h3><p>Tente outra região ou remova os filtros.</p><BaseButton variant="outline" @click="region = ''">Limpar filtros</BaseButton></div>
@@ -228,7 +225,7 @@ function wazeUrl(beach: Beach): string {
     <!-- Diretório gastronômico com busca, categorias e canais externos verificados. -->
     <FoodDirectory v-if="route.name === 'food'" />
 
-    <section v-if="route.name === 'home'" class="path-section"><article class="path-card path-stay"><div><p class="eyebrow">Para passar uns dias</p><h2>Acorde com a brisa do rio.</h2><p>Casas, pousadas e chalés para descansar, reunir a família e conhecer Mosqueiro no seu tempo.</p><BaseButton variant="light" @click="chooseMode('stay', true)">Encontrar hospedagem →</BaseButton></div><div class="path-art" aria-hidden="true"><span /><i /></div></article><article class="path-card path-buy"><div><p class="eyebrow">Para chamar de seu</p><h2>Crie raízes perto da água.</h2><p>Imóveis para morar, veranear ou começar um novo projeto, com informações claras e contato direto.</p><BaseButton variant="dark" @click="chooseMode('sale', true)">Ver imóveis à venda →</BaseButton></div><div class="path-art" aria-hidden="true"><span /><i /></div></article></section>
+    <section v-if="route.name === 'home'" class="path-section"><article class="path-card path-stay"><div><p class="eyebrow">Para passar uns dias</p><h2>Acorde com a brisa do rio.</h2><p>Casas, pousadas e chalés para descansar, reunir a família e conhecer Mosqueiro no seu tempo.</p><BaseButton variant="light" @click="chooseMode('stay', true)">Encontrar hospedagem →</BaseButton></div><div class="path-art" aria-hidden="true"><span /><i /></div></article></section>
 
     <section v-if="route.name === 'mosqueiro'" id="mosqueiro" class="story-section"><div class="story-visual" aria-label="Espaço reservado para fotografia de um chalé histórico"><div class="house-lines" aria-hidden="true"><span /><i /><b /></div><small>Imagem histórica ou autoral em breve</small></div><div class="story-copy"><p class="eyebrow">Uma ilha com memória</p><h2>Água doce, varandas abertas e histórias que atravessam gerações.</h2><p>Mosqueiro é praia fluvial, igarapé, bairro, feira e vida ribeirinha. Seus chalés guardam marcas do veraneio ligado à Belle Époque de Belém, enquanto a ilha segue viva no trabalho de pescadores, tapioqueiras, cozinheiros e moradores.</p><p>Aqui, encontrar um lugar também é aprender a cuidar dele.</p><a class="text-link" href="#guia">Veja o guia essencial ↓</a></div></section>
 
@@ -236,12 +233,12 @@ function wazeUrl(beach: Beach): string {
 
     <section v-if="route.name === 'mosqueiro'" id="guia" class="guide-section"><div><p class="eyebrow">Guia essencial</p><h2>Antes de chegar, vale saber</h2></div><div class="guide-list"><details><summary><span>01</span> Praias de água doce têm marés e ondas <i>+</i></summary><p>O comportamento da água muda ao longo do dia. Consulte condições locais e respeite a sinalização.</p></details><details><summary><span>02</span> Leve tempo para a culinária local <i>+</i></summary><p>Tapioca, peixe e sabores amazônicos fazem parte da experiência — prefira negócios e produtores locais.</p></details><details><summary><span>03</span> Cuide da ilha como quem mora aqui <i>+</i></summary><p>Recolha seu lixo, preserve áreas naturais e respeite a rotina das comunidades.</p></details></div></section>
 
-    <section v-if="route.name === 'home'" class="host-section"><div class="host-copy"><p class="eyebrow">Seu imóvel também pode estar aqui</p><h2>Abra as portas para novos encontros.</h2><p>Publique sua hospedagem ou imóvel à venda com uma apresentação feita para Mosqueiro.</p><BaseButton @click="openForm('announce')">Quero anunciar →</BaseButton></div><ol><li><b>01</b><span><strong>Conte sobre o imóvel</strong><small>Preencha as informações essenciais.</small></span></li><li><b>02</b><span><strong>Envie para revisão</strong><small>Conferimos clareza e segurança.</small></span></li><li><b>03</b><span><strong>Receba contatos</strong><small>Acompanhe o interesse pelo anúncio.</small></span></li></ol></section>
+    <section v-if="route.name === 'home'" class="host-section"><div class="host-copy"><p class="eyebrow">Sua hospedagem também pode estar aqui</p><h2>Abra as portas para novos encontros.</h2><p>Publique sua hospedagem com uma apresentação feita para Mosqueiro.</p><BaseButton @click="openForm('announce')">Quero anunciar →</BaseButton></div><ol><li><b>01</b><span><strong>Conte sobre a hospedagem</strong><small>Preencha as informações essenciais.</small></span></li><li><b>02</b><span><strong>Envie para revisão</strong><small>Conferimos clareza e segurança.</small></span></li><li><b>03</b><span><strong>Receba contatos</strong><small>Acompanhe o interesse pelo anúncio.</small></span></li></ol></section>
   </main>
 
-  <footer class="site-footer"><div class="footer-top"><div><RouterLink class="brand brand-light" to="/"><span class="brand-mark"><i /><i /><i /></span><span>Ilha <b>&</b> Lar</span></RouterLink><p>Seu canto em Mosqueiro,<br> por alguns dias ou por muitos anos.</p></div><div><h3>Encontre</h3><RouterLink to="/hospedagens">Hospedagens</RouterLink><RouterLink to="/imoveis">Imóveis à venda</RouterLink><RouterLink to="/onde-comer">Onde comer</RouterLink></div><div><h3>Para anunciar</h3><button @click="openForm('announce')">Publicar imóvel</button><button @click="openForm('login')">Área do anunciante</button></div><div><h3>Descubra</h3><RouterLink to="/mosqueiro">Conheça Mosqueiro</RouterLink><a href="mailto:contato@ilhaelar.com.br">Contato</a></div></div><div class="footer-bottom"><span>© 2026 Ilha & Lar — Protótipo demonstrativo.</span><span>Privacidade · Termos · Acessibilidade</span></div></footer>
+  <footer class="site-footer"><div class="footer-top"><div><RouterLink class="brand brand-light" to="/"><span class="brand-mark"><i /><i /><i /></span><span>Ilha <b>&</b> Lar</span></RouterLink><p>Seu canto em Mosqueiro,<br> por alguns dias.</p></div><div><h3>Encontre</h3><RouterLink to="/hospedagens">Hospedagens</RouterLink><RouterLink to="/onde-comer">Onde comer</RouterLink></div><div><h3>Para anunciar</h3><button @click="openForm('announce')">Publicar hospedagem</button><button @click="openForm('login')">Área do anunciante</button></div><div><h3>Descubra</h3><RouterLink to="/mosqueiro">Conheça Mosqueiro</RouterLink><a href="mailto:contato@ilhaelar.com.br">Contato</a></div></div><div class="footer-bottom"><span>© 2026 Ilha & Lar — Protótipo demonstrativo.</span><span>Privacidade · Termos · Acessibilidade</span></div></footer>
 
-  <dialog ref="detailDialog" class="modal" @click.self="detailDialog?.close()"><button class="modal-close" aria-label="Fechar" @click="detailDialog?.close()">×</button><template v-if="selectedListing"><div class="detail-visual"><small>Galeria de fotos será adicionada na próxima etapa</small></div><div class="detail-body"><span class="listing-location">{{ selectedListing.region }} · Mosqueiro</span><h2>{{ selectedListing.title }}</h2><div class="detail-facts"><span v-for="fact in selectedListing.meta" :key="fact">{{ fact }}</span></div><p>Este anúncio é demonstrativo para validar a experiência. Informações finais, documentação e disponibilidade serão conferidas antes da publicação real.</p><div class="detail-action"><div class="listing-price"><small>valor demonstrativo</small><strong>{{ formatPrice(selectedListing) }}</strong></div><BaseButton @click="openForm(selectedListing.purpose === 'sale' ? 'visit' : 'booking')">{{ selectedListing.purpose === 'sale' ? 'Agendar visita' : 'Solicitar reserva' }}</BaseButton></div></div></template></dialog>
+  <dialog ref="detailDialog" class="modal" @click.self="detailDialog?.close()"><button class="modal-close" aria-label="Fechar" @click="detailDialog?.close()">×</button><template v-if="selectedListing"><div class="detail-visual"><small>Galeria de fotos será adicionada na próxima etapa</small></div><div class="detail-body"><span class="listing-location">{{ selectedListing.region }} · Mosqueiro</span><h2>{{ selectedListing.title }}</h2><div class="detail-facts"><span v-for="fact in selectedListing.meta" :key="fact">{{ fact }}</span></div><p>Este anúncio é demonstrativo para validar a experiência. Informações finais e disponibilidade serão conferidas antes da publicação real.</p><div class="detail-action"><div class="listing-price"><small>valor demonstrativo</small><strong>{{ formatPrice(selectedListing) }}</strong></div><BaseButton @click="openForm('booking')">Solicitar reserva</BaseButton></div></div></template></dialog>
   <dialog ref="formDialog" class="modal form-modal" @click.self="formDialog?.close()"><button class="modal-close" aria-label="Fechar" @click="formDialog?.close()">×</button><div class="form-content"><p class="eyebrow">{{ modalKind === 'login' ? 'Sua conta' : modalKind === 'announce' ? 'Comece a anunciar' : 'Contato com o responsável' }}</p><h2>{{ modalTitle }}</h2><p>Preencha seus dados para continuar neste fluxo demonstrativo.</p><form @submit.prevent="submitForm"><label>Nome completo<input autocomplete="name" required></label><label>E-mail<input type="email" autocomplete="email" required></label><template v-if="modalKind !== 'login'"><label>Telefone<input type="tel" autocomplete="tel" required></label><label class="checkbox"><input type="checkbox" required><span>Concordo com o uso destes dados para atender esta solicitação.</span></label></template><BaseButton type="submit">{{ modalKind === 'login' ? 'Continuar' : 'Enviar solicitação' }}</BaseButton></form></div></dialog>
   <div class="toast" :class="{ show: toastMessage }" role="status" aria-live="polite">{{ toastMessage }}</div>
 </template>

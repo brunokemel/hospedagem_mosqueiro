@@ -184,7 +184,7 @@ Ainda não existem:
 
 ## Imagens
 
-As imagens do hero ficam em `src/banner/`. A versão atualmente escolhida é `orla2.0.jpg`, pois sua proporção 16:9 preserva melhor o horizonte, a praia e as pessoas nos recortes responsivos.
+A imagem do hero fica em `src/banner/orla2.0.jpg`. Sua proporção 16:9 preserva o horizonte, a praia e as pessoas nos recortes responsivos.
 
 Antes do uso comercial, confirme autoria, licença, consentimentos necessários e créditos da fotografia.
 
